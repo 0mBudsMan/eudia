@@ -235,7 +235,7 @@ def fetch_indian_kanoon_cases(
             'cases': all_results
         }
         print("DONE")
-        return json.dumps(summary, ensure_ascii=False, indent=2)
+        return summary
 
 
 def ik_search_adapter(text: str) -> WorkflowState:

@@ -73,16 +73,20 @@ def main() -> None:
 
     print("=== Legal Strategy Workflow Output ===")
     print("\n--- Research Materials ---")
-    print(final_state.get("research_materials", "").strip())
+    print(final_state.get("research_materials", ""))
     output_text = []
-    output_text.append("=== Legal Strategy Workflow Output ===")
-    output_text.append("\n--- Research Materials ---")
-    output_text.append(final_state.get("research_materials", "").strip())
-    final_output = "\n".join(output_text).strip()
-    # print to terminal
+    # output_text.append("=== Legal Strategy Workflow Output ===")
+    # output_text.append("\n--- Research Materials ---")
+    output_json = {
+        "research_materials": final_state.get("research_materials", ""),
+    }
+    final_output = json.dumps(output_json, indent=2)
+
+    # print to terminal (pretty JSON)
     print(final_output)
-    # also write to file
-    out_path = Path("./output.txt")
+
+    # also write to file as JSON
+    out_path = Path("./output.json")
     out_path.write_text(final_output + "\n", encoding="utf-8")
 
 if __name__ == "__main__":
