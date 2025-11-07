@@ -255,11 +255,14 @@ def ik_search_adapter(text: str) -> WorkflowState:
     results = fetch_indian_kanoon_cases(
         queries=queries,
         api_token=api_token,
-        target_total=200,
+        target_total=1,
         max_pages_per_query=5
     )
     print(results)
-    return {"ik_search_results": results}
+    return {
+        "ik_search_results": results,
+        "research_materials": results,
+    }
 
 
 def default_agent_configs() -> Sequence[AgentConfig]:

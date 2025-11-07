@@ -78,6 +78,12 @@ def main() -> None:
     output_text.append("=== Legal Strategy Workflow Output ===")
     output_text.append("\n--- Research Materials ---")
     output_text.append(final_state.get("research_materials", "").strip())
+    final_output = "\n".join(output_text).strip()
+    # print to terminal
+    print(final_output)
+    # also write to file
+    out_path = Path("./output.txt")
+    out_path.write_text(final_output + "\n", encoding="utf-8")
 
 if __name__ == "__main__":
     main()
