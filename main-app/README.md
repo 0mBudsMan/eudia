@@ -23,6 +23,28 @@ This Next.js 16 project combines the **Legal Case Analyzer** from `main-app` and
    ```
 4. Open `http://localhost:3000` for the Case Analyzer or `http://localhost:3000/contracts` for ContractDraft.
 
+## Research API Backend
+The Legal Case Analyzer now talks to a FastAPI service that serves previously analyzed precedents.
+
+1. Install Python dependencies once from the repo root:
+   ```bash
+   pip install -r requirements.txt
+   ```
+2. (Optional) Override `LEGAL_ANALYSIS_RESULTS_FILE` or `CASES_DATA_DIR` if your data lives outside the repo.
+3. Start the API:
+   ```bash
+   uvicorn research_api.main:app --reload --port 8000
+   ```
+4. Point the frontend at the API by adding this to `.env.local`:
+   ```bash
+   NEXT_PUBLIC_RESEARCH_API_URL=http://localhost:8000
+   ```
+
+The API exposes:
+- `POST /api/research/brief` &mdash; submit a case narrative and receive related precedents.
+- `GET /api/research/cases/{doc_id}` &mdash; fetch full case details, including reasoning and citations.
+- `POST /api/research/cases/{doc_id}/analyze` &mdash; request a quick verdict simulation for unanalyzed cases.
+
 ## Available Scripts
 - `npm run dev` – start Next.js in development mode.
 - `npm run build` – create a production build.
