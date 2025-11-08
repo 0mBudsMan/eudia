@@ -282,6 +282,7 @@ def default_agent_configs() -> Sequence[AgentConfig]:
                         "Each query should focus on: key legal issues, relevant statutes/acts, "
                         "jurisdiction, case types, and important legal principles.\n\n"
                         "Return ONLY the queries, one per line, seperated by bullets."
+                        "It should be atmost 5-6 words with high impact."
                         "Queries should not be startin with double quotes, and there should not be double quotes anywhere"
                     ),
                 ),
