@@ -20,8 +20,20 @@ def main():
     print("=" * 50)
 
     # Configuration - customize these as needed
-    USER_QUERY = "breach of contract for delayed delivery causing financial losses"
-    USER_CONTEXT = "I am a buyer who suffered losses due to delayed delivery of critical equipment from a supplier"
+    USER_QUERY = """Client is a regional medical device supplier being sued for delayed delivery of
+critical hospital equipment. The plaintiff alleges breach of contract and seeks
+reimbursement for expedited replacements, lost revenue during the delay period,
+and reputational harm with partner hospitals. Jurisdiction is Illinois federal
+court; the supply agreement contains limitation-of-liability and force majeure
+clauses.
+"""
+    USER_CONTEXT = """
+Client is a regional medical device supplier being sued for delayed delivery of
+critical hospital equipment. The plaintiff alleges breach of contract and seeks
+reimbursement for expedited replacements, lost revenue during the delay period,
+and reputational harm with partner hospitals. Jurisdiction is Illinois federal
+court; the supply agreement contains limitation-of-liability and force majeure
+clauses."""
     JSON_FILE = "output.json"
     OUTPUT_FILE = "legal_analysis_results.json"
     TOP_CASES = 10
@@ -67,6 +79,14 @@ def main():
             print(
                 f"   Court: {case['court']} | Date: {case['date']} | Verdict: {case['verdict']}"
             )
+
+            # Show user party identification if available
+            if (
+                "user_party_identified" in case
+                and case["user_party_identified"] != "Unknown"
+            ):
+                print(f"   User represents: {case['user_party_identified']}")
+
             print()
 
         if results["total_cases_analyzed"] > 3:

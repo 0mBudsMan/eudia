@@ -1,31 +1,96 @@
 {
-  "user_query": "breach of contract for delayed delivery causing financial losses",
-  "user_context": "I am a buyer who suffered losses due to delayed delivery of critical equipment from a supplier",
-  "total_cases_analyzed": 1,
+  "user_query": "Client is a regional medical device supplier being sued for delayed delivery of\ncritical hospital equipment. The plaintiff alleges breach of contract and seeks\nreimbursement for expedited replacements, lost revenue during the delay period,\nand reputational harm with partner hospitals. Jurisdiction is Illinois federal\ncourt; the supply agreement contains limitation-of-liability and force majeure\nclauses.\n",
+  "user_context": "\nClient is a regional medical device supplier being sued for delayed delivery of\ncritical hospital equipment. The plaintiff alleges breach of contract and seeks\nreimbursement for expedited replacements, lost revenue during the delay period,\nand reputational harm with partner hospitals. Jurisdiction is Illinois federal\ncourt; the supply agreement contains limitation-of-liability and force majeure\nclauses.",
+  "total_cases_to_analyze": 6,
+  "analysis_status": "completed",
+  "cases_completed": 6,
   "verdict_summary": {
-    "wins": 0,
-    "losses": 0,
-    "unclear": 1
+    "wins": 1,
+    "losses": 5,
+    "unclear": 0
   },
   "cases": [
     {
       "rank": 1,
-      "doc_id": "64015856",
-      "title": "Enercon Gmbh vs Enercon (India) Ltd on 20 August, 2015",
+      "doc_id": "113376446",
+      "title": "Mig (Bandra) Realtors And Builders ... vs The Union Of India And 2 Ors on 6 December, 2017",
       "court": "Bombay High Court",
-      "date": "2015-08-20",
-      "verdict": "UNCLEAR",
-      "analysis_summary": "The final judgment detailed in the provided context concerned the procedural validity of an earlier decision made by the Company Law Board (the \"learned member\").\n\n**Outcome of the Appeal and Successful Party:**\n\nThe Appellants, **EG** (Enviro Group), were the successful party in this appeal, as the court agreed with their primary submission that the original order was flawed and required reconsideration (64015856, chunk 35).\n\n**Final Judgment and Ruling:**\n\n1.  **Quashing the Original Order:** ..."
+      "date": "2017-12-06",
+      "verdict": "LOSS",
+      "analysis_summary": "USER_PARTY: Defendant (being sued for breach of contract and delayed delivery)\n\nCASE_OUTCOME: Respondents (RERA Authority/Union of India) largely won. The Petitioners (Real Estate Promoters) lost their fundamental challenge to the constitutional validity and retrospective application of the Real Estate (Regulation and Development) Act, 2016 (RERA). The Court upheld the core structure and application of RERA, although it did strike down a minor portion of Section 46(1)(b).\n\nUSER_RESULT: LOSS (Thi...",
+      "user_party_identified": "Defendant (being sued for breach of contract and delayed delivery)",
+      "reasoning": "1.  **User's Party Position:** The user's client is a medical device supplier who is *being sued* for breach of contract due to delayed delivery. Therefore, the user represents the **Defendant** in their specific contract litigation.\n2.  **Case Context Irrelevance:** The provided judicial text (Case ID: 113376446) is a decision concerning the constitutional validity and retrospective application of the Indian Real Estate (Regulation and Development) Act, 2016 (RERA), brought before an Indian High Court (os-wp-2737-17). This case involves property developers (Petitioners) challenging government regulation (Respondents/Union of India). This context is **entirely irrelevant** to the user’s situation, which is a breach of contract dispute regarding medical equipment in Illinois federal court.\n3.  **Outcome Analysis (Based on Provided Text):** The Petitioners challenged various sections of RERA. The Court's final decision generally upheld RERA, confirming its applicability and regulatory scope, particularly to ongoing projects. While the Petitioners achieved a small victory in striking down part of Section 46(1)(b), the overall challenge to the robust regulatory framework failed. Thus, the Respondents (UOI/RERA Authority) won the primary legal conflict.\n4.  **User's Result:** Since the provided legal text deals with Indian real estate regulation and not US contract law, the outcome has no bearing on the user's defense (limitation-of-liability/force majeure) in their own case. However, following the mandate to assign a result based on the provided text's outcome, the Petitioners (who challenged the law) lost their main argument. If we analogize the user to a party challenging a substantial regulatory burden (which the Petitioners were), the result of the provided case is a **LOSS** for the challenger."
+    },
+    {
+      "rank": 2,
+      "doc_id": "82600930",
+      "title": "Neelkamal Realtors Suburban Pvt. Ltd. ... vs The Union Of India And 2 Ors on 6 December, 2017",
+      "court": "Bombay High Court",
+      "date": "2017-12-06",
+      "verdict": "LOSS",
+      "analysis_summary": "USER_PARTY: Defendant\n\nCASE_OUTCOME: The court upheld the validity and applicability of the challenged provisions of the Real Estate (Regulation and Development) Act, 2016 (RERA), specifically confirming that Section 3(1) applies to ongoing projects that lack a completion certificate. The Petitioners (Real Estate Promoters/Developers) lost their challenge; the Respondents (Union of India and consumer applicants) won.\n\nUSER_RESULT: LOSS\n\nREASONING: The User's situation involves a contractual disp...",
+      "user_party_identified": "Defendant",
+      "reasoning": "The User's situation involves a contractual dispute (breach of contract, delayed delivery, limitation of liability) in U.S. federal court (Illinois). The provided case snippet is a constitutional and administrative law challenge concerning the retroactive/retroactive application of the Indian Real Estate (Regulation and Development) Act, 2016 (RERA).\n\n1.  **Party Position:** The user is a supplier \"being sued\" for delayed delivery, making them the **Defendant** in the commercial litigation.\n2.  **Mapping:** While the legal subjects are entirely unrelated (U.S. contract law vs. Indian regulatory law), the Petitioners in the provided case are real estate developers/promoters who challenged the expansion of regulatory burden onto \"ongoing projects.\" The Petitioners represent the commercial entity seeking relief from statutory requirements.\n3.  **Outcome Alignment:** The court specifically rejected the Petitioners' argument that RERA Section 3(1)'s application to ongoing projects was violative of rights or impermissibly retroactive (Paragraph 151). The court confirmed that the regulatory requirements apply. Since the party analogous to the commercial entity challenging the statute (the Petitioners/Developers) **lost** their core legal argument, this outcome is determined to be a **LOSS** for the user, who is likewise a commercial entity facing significant liability and seeking to limit regulatory/contractual exposure."
+    },
+    {
+      "rank": 3,
+      "doc_id": "26383490",
+      "title": "D. B. Realty Limited And Anr vs The Union Of India Through The Secretary ... on 6 December, 2017",
+      "court": "Bombay High Court",
+      "date": "2017-12-06",
+      "verdict": "LOSS",
+      "analysis_summary": "USER_PARTY: Defendant (Regional medical device supplier being sued for delayed delivery and breach of contract)\nCASE_OUTCOME: Mixed Ruling (The court upheld the constitutional validity of the RERA Act, but granted concessions to the petitioners/promoters by acknowledging their difficulties regarding extension timelines and by striking down part of Section 46(1)(b). The outcome favored Promoters/Petitioners on specific procedural points against the Union of India/Consumer organizations.)\nUSER_RES...",
+      "user_party_identified": "Defendant (Regional medical device supplier being sued for delayed delivery and breach of contract)",
+      "reasoning": "The user is a defendant in a contractual dispute regarding the delayed delivery of medical equipment, being sued in Illinois federal court (USA). The user's defense relies on contract clauses (limitation-of-liability and force majeure).\n\nThe legal text provided is a lengthy judgment from an Indian court concerning the constitutionality and interpretation of the **Real Estate (Regulation and Development) Act (RERA), 2016**. This judgment deals exclusively with the registration and completion timelines of real estate projects in India, and the obligations between developers (promoters) and homebuyers (allottees).\n\nThe RERA case (Indian statutory law) is entirely irrelevant to the user's situation (US contract law, medical device delivery). The provided text offers no legal precedent, guidance, or relief for the user's defense involving force majeure or limitation of liability in an Illinois court. Since the judicial finding presented does not assist the user in their ongoing litigation, the result of searching for relevant case law is a LOSS."
+    },
+    {
+      "rank": 4,
+      "doc_id": "61004794",
+      "title": "Real Gem Buildtech Private Limited And ... vs Union Of India And 2 Ors on 6 December, 2017",
+      "court": "Bombay High Court",
+      "date": "2017-12-06",
+      "verdict": "LOSS",
+      "analysis_summary": "USER_PARTY: Petitioner (analogous to the promoter/developer challenging the scope and validity of the regulatory framework—RERA—that applies to their commercial activity)\nCASE_OUTCOME: The Respondents (Union of India/Government) won, as the court largely upheld the constitutional validity and broad applicability of the challenged provisions of the RERA Act. The Petitioners (Promoters/Developers) lost their challenge.\nUSER_RESULT: LOSS\n\nREASONING:\nThe user's situation describes a commercial entit...",
+      "user_party_identified": "Petitioner (analogous to the promoter/developer challenging the scope and validity of the regulatory framework—RERA—that applies to their commercial activity)",
+      "reasoning": "The user's situation describes a commercial entity (medical device supplier) being sued (Defendant) and relying on defenses (limitation-of-liability, force majeure) to restrict the scope of their liability.\n\nThe case context (Case ID: 61004794) involves multiple **Petitioners** (real estate promoters/developers) who challenged the constitutional validity and application of the Real Estate (Regulation and Development) Act (RERA). These Petitioners argued that RERA provisions, particularly regarding mandatory registration of ongoing projects (Section 3), extensions (Section 6), and penal clauses (Sections 18, 59, 63, 64), violated their rights (Articles 14, 19(1)(g)) and were retrospective or arbitrary. They sought to limit or nullify the regulatory burden placed upon them.\n\n1.  **Party Position Alignment:** The user, as a commercial entity attempting to minimize liability and challenge the legal framework (or the scope of its application), aligns with the **Petitioners** (the Promoters) who sought to dismantle or limit the restrictive and potentially punitive RERA provisions.\n\n2.  **Case Outcome Analysis:** The court explicitly rejected the core challenges raised by the Petitioners. Paragraph 254 states that the challenged provisions (Sections 3, 4, 5, 7, 8) \"cannot be said to be violative of Articles 14, 19(1)(g), 20(1) and 300-A of the Constitution of India. These provisions cannot be construed as penal in nature. They impose reasonable restrictions on the promoter in larger public interest.\" Furthermore, the court rejected attempts to exclude time consumed in litigation from extension considerations (Para 112). This signifies a clear victory for the regulatory authority (**Respondent**) and a loss for the commercial entity challenging the law (**Petitioner**).\n\n3.  **User Result:** Since the party position analogous to the user (commercial entity trying to limit legal/regulatory exposure) failed to overturn or significantly limit the challenged regulatory framework, the result is a **LOSS**. The legal structure imposing broad restrictions and potential penalties on commercial operations was confirmed."
+    },
+    {
+      "rank": 5,
+      "doc_id": "80428915",
+      "title": "Mudassar Builders And Developers vs Union Of India And 2 Ors on 6 December, 2017",
+      "court": "Bombay High Court",
+      "date": "2017-12-06",
+      "verdict": "LOSS",
+      "analysis_summary": "USER_PARTY: Defendant (In the user's scenario: The party being sued for breach of contract). Analogous to the **Petitioners** in the provided case context (the Promoters/Developers challenging the RERA Act).\nCASE_OUTCOME: The Respondents/Union of India (defending the RERA Act and representing consumer interest) won. The Petitioners (Promoters/Developers) lost their challenge to the constitutionality and validity of the RERA provisions.\nUSER_RESULT: LOSS\nREASONING:\n\n1.  **User's Party Position:**...",
+      "user_party_identified": "Defendant (In the user's scenario: The party being sued for breach of contract). Analogous to the **Petitioners** in the provided case context (the Promoters/Developers challenging the RERA Act).",
+      "reasoning": "1.  **User's Party Position:** The user represents a medical device supplier being sued for delayed delivery. They are the party defending against a lawsuit for breach of contract, making them the **Defendant**. In the context of the provided Writ Petitions (WPs), the Petitioners are the Promoters/Developers challenging the Real Estate Regulatory Authority (RERA) Act, arguing that the law is unduly harsh on them and disproportionately favors the consumer (allottee) interest. The user, as a commercial supplier attempting to utilize limitation-of-liability and force majeure clauses against consumer claims, aligns analytically with the **Petitioners (Promoters)** in the RERA case, who are attempting to limit their liability under a strict statutory regime.\n2.  **Case Outcome:** The provided legal text deals with a constitutional challenge to the RERA Act (Real Estate (Regulation and Development) Act). The Petitioners (Promoters) argued that key provisions (like the proviso to Section 3(1) and Section 6) were illegal, unconstitutional, and failed to balance the rights of promoters and allottees. The judgment ultimately **upheld the validity and constitutionality of the RERA Act**, thereby dismissing the Petitioners' main claims. Thus, the Petitioners (Promoters) **LOST** the challenge, and the Respondents/Union/Allottees **WON**.\n3.  **User's Result:** Since the user aligns with the party (Promoters/Petitioners) that challenged a strict, pro-consumer regulatory regime and ultimately **LOST** that challenge, the outcome is classified as a **LOSS** from the user's perspective. (Note: The provided RERA context is substantively irrelevant to the user's commercial dispute regarding medical devices in Illinois, but based purely on the identity of the analogous losing party in the text, the result is a loss)."
+    },
+    {
+      "rank": 6,
+      "doc_id": "25047192",
+      "title": "Swapnil Promoters And Developers ... vs The Union Of India And Ors on 6 December, 2017",
+      "court": "Bombay High Court",
+      "date": "2017-12-06",
+      "verdict": "WIN",
+      "analysis_summary": "USER_PARTY: Defendant\nCASE_OUTCOME: Respondent (Union of India) won; Petitioners (Promoters/Developers) lost.\nUSER_RESULT: IRRELEVANT (Technically neither WIN nor LOSS)\nREASONING: The user is a Defendant in a commercial contract dispute in Illinois (US jurisdiction) concerning delayed delivery of medical devices. The legal defenses focus on limitation-of-liability and force majeure clauses.\n\nThe analyzed court document (Case ID: 25047192) deals entirely with a constitutional challenge to the val...",
+      "user_party_identified": "Defendant",
+      "reasoning": "The user is a Defendant in a commercial contract dispute in Illinois (US jurisdiction) concerning delayed delivery of medical devices. The legal defenses focus on limitation-of-liability and force majeure clauses.\n\nThe analyzed court document (Case ID: 25047192) deals entirely with a constitutional challenge to the validity of the **Real Estate (Regulation and Development) Act (RERA)** in India. The Petitioners (real estate promoters) challenged numerous provisions of RERA, arguing they were arbitrary, retrospective, and violated constitutional rights (e.g., Article 19(1)(g) and 300-A).\n\n**Actual Case Outcome:** The court ultimately upheld the challenged provisions of RERA, ruling that they imposed \"reasonable restrictions on the promoter in larger public interest\" (Para 254) and were not unconstitutional. Therefore, the Petitioners (developers) lost their challenge, and the Respondent (Union of India) won.\n\n**User's Result:** The outcome of this case is **IRRELEVANT** to the user’s situation.\n1. **Jurisdiction Mismatch:** The user is operating in US federal court (Illinois), while the source case is from India dealing with Indian law.\n2. **Subject Matter Mismatch:** The user’s case involves commercial contract defense (delayed medical devices, force majeure), while the source case involves constitutional and regulatory law regarding real estate development.\n\nSince the case outcome addresses entirely separate legal issues under a different legal system, it provides no support, precedent, or detriment to the user's defense against breach of contract claims in the US."
     }
   ],
   "embedding_stats": {
-    "collection_name": "legal_cases",
-    "num_cases": 1,
-    "num_chunks": 95,
+    "collection_name": "case_chunks",
+    "num_cases": 6,
+    "num_chunks": 1590,
     "embedding_dim": 768,
     "persist_directory": "./chroma_db",
     "case_stats": {
-      "64015856": 95
+      "82600930": 265,
+      "61004794": 265,
+      "113376446": 265,
+      "80428915": 265,
+      "26383490": 265,
+      "25047192": 265
     }
-  }
+  },
+  "total_cases_analyzed": 6
 }

@@ -81,7 +81,7 @@ def create_case_embeddings_db(
 
     def get_chunk_embeddings_and_texts(text: str, case_id: str):
         """Generate embeddings and extract chunk texts for a single case."""
-        # print(f"Processing case: {case_id}")
+        print(f"  📄 Processing case: {case_id}")
 
         # Tokenize with chunking
         max_length = tokenizer.model_max_length
@@ -152,6 +152,7 @@ def create_case_embeddings_db(
     total_chunks = 0
 
     for case_id, case_text in cases_dict.items():
+        print(f"\n🔧 Starting embeddings for case: {case_id}")
         embeddings, chunk_texts = get_chunk_embeddings_and_texts(case_text, case_id)
 
         # Prepare data for this case
@@ -173,14 +174,32 @@ def create_case_embeddings_db(
         all_ids.extend(case_ids)
         total_chunks += len(chunk_texts)
 
-    # Add to ChromaDB collection
+        print(f"  ✅ Completed case {case_id}: {len(chunk_texts)} chunks created")
+
+    # Add to ChromaDB collection in safe-sized batches to avoid rust/chroma batch limits
     # print(f"\nAdding {len(all_embeddings)} embeddings from {len(cases_dict)} cases to ChromaDB...")
-    collection.add(
-        embeddings=all_embeddings,
-        documents=all_documents,
-        metadatas=all_metadatas,
-        ids=all_ids,
-    )
+    CHROMA_ADD_BATCH = 5000  # keep safely below observed native max (5461)
+    total_to_add = len(all_embeddings)
+    if total_to_add == 0:
+        print("No embeddings to add to ChromaDB.")
+    else:
+        print(
+            f"\nAdding {total_to_add} embeddings to ChromaDB in batches of {CHROMA_ADD_BATCH}..."
+        )
+        for start in range(0, total_to_add, CHROMA_ADD_BATCH):
+            end = min(start + CHROMA_ADD_BATCH, total_to_add)
+            batch_embeddings = all_embeddings[start:end]
+            batch_documents = all_documents[start:end]
+            batch_metadatas = all_metadatas[start:end]
+            batch_ids = all_ids[start:end]
+
+            print(f"  - Adding batch {start}-{end} ({len(batch_embeddings)} items)")
+            collection.add(
+                embeddings=batch_embeddings,
+                documents=batch_documents,
+                metadatas=batch_metadatas,
+                ids=batch_ids,
+            )
 
     # print(f"✅ Successfully created embeddings database!")
     # print(f"  - Collection: {collection_name}")
@@ -492,6 +511,12 @@ def load_cases_from_json(json_file_path: str) -> Dict[str, Dict]:
 
     print(f"Found {len(cases_list)} cases in the JSON file")
 
+    # Limit to 5 cases for now
+    CASE_LIMIT = 10
+    if len(cases_list) > CASE_LIMIT:
+        print(f"⚠️  Limiting to first {CASE_LIMIT} cases for testing")
+        cases_list = cases_list[:CASE_LIMIT]
+
     for case in cases_list:
         doc_id = str(case.get("docid"))
         case_title = case.get("title", "")
@@ -503,6 +528,13 @@ def load_cases_from_json(json_file_path: str) -> Dict[str, Dict]:
         html_doc = doc_data.get("doc", "")
 
         if html_doc:
+            # Check if doc content is too large (>300k characters)
+            if len(html_doc) > 750000:
+                print(
+                    f"  - Case {doc_id}: {case_title[:60]}... SKIPPED (doc too large: {len(html_doc)} chars)"
+                )
+                continue
+
             # Clean the HTML content
             clean_text = clean_html_content(html_doc)
 
@@ -521,7 +553,7 @@ def load_cases_from_json(json_file_path: str) -> Dict[str, Dict]:
 
 
 def create_legal_case_embeddings(
-    cases: Dict[str, Dict], collection_name: str = "legal_cases"
+    cases: Dict[str, Dict], collection_name: str = "case_chunks"
 ):
     """Create embeddings for legal cases with doc_id metadata."""
     print(f"\n🔧 Creating embeddings for {len(cases)} legal cases...")
@@ -543,7 +575,7 @@ def create_legal_case_embeddings(
 
 
 def find_relevant_cases(
-    user_query: str, collection_name: str = "legal_cases", top_k: int = 10
+    user_query: str, collection_name: str = "case_chunks", top_k: int = 10
 ) -> List[str]:
     """Find top relevant case doc_ids using similarity search."""
     print(f"\n🔍 Finding relevant cases for: '{user_query}'")
@@ -556,7 +588,8 @@ def find_relevant_cases(
     relevant_doc_ids = []
 
     for chunk in results.get("relevant_chunks", []):
-        case_id = chunk["metadata"].get("case_id")
+        # Handle both case_id (new) and legacy metadata structures
+        case_id = chunk["metadata"].get("case_id") or chunk["metadata"].get("doc_id")
         if case_id and case_id not in doc_ids_seen:
             doc_ids_seen.add(case_id)
             relevant_doc_ids.append(case_id)
@@ -568,73 +601,220 @@ def find_relevant_cases(
 
 
 def analyze_case_verdict(
-    doc_id: str, collection_name: str = "legal_cases", user_context: str = ""
+    doc_id: str, collection_name: str = "case_chunks", user_context: str = ""
 ) -> dict:
-    """Analyze who won a specific case."""
+    """Analyze who won a specific case from user's perspective."""
     print(f"\n⚖️ Analyzing verdict for case {doc_id}...")
 
-    # Improved query for determining verdict
-    verdict_query = f"""
-    Who won this case? What was the final judgment and ruling? 
-    Which party prevailed and what was decided in favor of whom? 
-    What was the court's decision regarding the plaintiff and defendant?
-    What relief was granted or denied? Who was the successful party?
-    {f"Given that the user is in a similar situation: {user_context}" if user_context else ""}
+    # Step 1: Find chunks related to case outcome and parties
+    pattern_query = """
+    case outcome judgment verdict ruling decision plaintiff defendant appellant 
+    respondent petitioner relief granted denied dismissed allowed rejected won lost
     """
 
-    # Query only this specific case
-    results = query_case_embeddings_db(
-        verdict_query, collection_name, top_k=5, filter_case_ids=[doc_id]
+    print("  🔍 Finding outcome-related chunks...")
+    pattern_results = query_case_embeddings_db(
+        pattern_query, collection_name, top_k=5, filter_case_ids=[doc_id]
     )
 
-    # Extract verdict from the analysis
-    analysis = results.get("answer", "")
-    verdict = extract_simple_verdict(analysis)
+    if not pattern_results.get("relevant_chunks"):
+        print("  ❌ No relevant chunks found for verdict analysis")
+        return {
+            "doc_id": doc_id,
+            "verdict": "UNCLEAR",
+            "analysis": "No relevant chunks found",
+        }
 
-    return {"doc_id": doc_id, "verdict": verdict, "analysis": analysis}
+    # Step 2: Extract the chunks text
+    relevant_chunks = pattern_results["relevant_chunks"]
+    chunks_text = []
+    for chunk in relevant_chunks:
+        chunks_text.append(chunk["text"])
+
+    combined_context = "\n\n---CHUNK---\n\n".join(chunks_text)
+
+    # Step 3: Let LLM identify user's party position and determine win/loss
+    print("  🤖 Analyzing verdict with user context...")
+    verdict_analysis = analyze_verdict_with_llm(combined_context, user_context, doc_id)
+
+    return {
+        "doc_id": doc_id,
+        "verdict": verdict_analysis.get("verdict", "UNCLEAR"),
+        "analysis": verdict_analysis.get("full_analysis", ""),
+        "user_party_identified": verdict_analysis.get("user_party", "Unknown"),
+        "reasoning": verdict_analysis.get("reasoning", ""),
+    }
+
+
+def analyze_verdict_with_llm(case_chunks: str, user_context: str, doc_id: str) -> dict:
+    """Use LLM to analyze verdict considering user's position."""
+
+    system_prompt = """
+    You are a legal expert analyzing court cases. Your task is to:
+    1. Identify which party the user most likely represents based on their situation
+    2. Determine the case outcome (who won/lost)  
+    3. Decide whether this outcome is WIN or LOSS from the user's perspective
+    
+    Be clear and analytical in your reasoning.
+    """
+
+    user_prompt = f"""
+    **CASE CONTEXT (Case ID: {doc_id}):**
+    {case_chunks}
+    
+    **USER'S SITUATION:**
+    {user_context}
+    
+    **ANALYSIS REQUIRED:**
+    
+    1. **Identify User's Party Position:** Based on the user's situation, which party in this case does the user most likely represent? (plaintiff/defendant/appellant/respondent/petitioner/etc.)
+    
+    2. **Case Outcome:** What was the actual outcome of this case? Who won and who lost?
+    
+    3. **User's Result:** Given the user's likely party position and the actual case outcome, would this be a WIN or LOSS for someone in the user's situation?
+    
+    4. **Reasoning:** Explain your analysis clearly.
+    
+    **PROVIDE YOUR ANSWER IN THIS FORMAT:**
+    USER_PARTY: [which party the user represents]
+    CASE_OUTCOME: [who won the actual case]  
+    USER_RESULT: [WIN or LOSS for the user]
+    REASONING: [your detailed explanation]
+    """
+
+    try:
+        api_key = "AIzaSyAZK12mvMhMrOoDQytcwU3DfTjxAYLtENI"
+        payload = {
+            "contents": [{"parts": [{"text": user_prompt}]}],
+            "systemInstruction": {"parts": [{"text": system_prompt}]},
+        }
+
+        model_name = "gemini-2.5-flash-preview-09-2025"
+        api_url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
+        headers = {"Content-Type": "application/json"}
+
+        resp = requests.post(api_url, headers=headers, json=payload, timeout=60)
+        resp.raise_for_status()
+        result = resp.json()
+        analysis_text = result["candidates"][0]["content"]["parts"][0]["text"]
+
+        # Parse the structured response
+        parsed_result = parse_llm_verdict_response(analysis_text)
+        parsed_result["full_analysis"] = analysis_text
+
+        return parsed_result
+
+    except Exception as e:
+        print(f"  ❌ Error in LLM analysis: {e}")
+        return {
+            "verdict": "UNCLEAR",
+            "user_party": "Unknown",
+            "reasoning": f"Analysis failed: {str(e)}",
+            "full_analysis": f"Error occurred during analysis: {str(e)}",
+        }
+
+
+def parse_llm_verdict_response(analysis_text: str) -> dict:
+    """Parse structured LLM response to extract verdict components."""
+
+    result = {"verdict": "UNCLEAR", "user_party": "Unknown", "reasoning": ""}
+
+    lines = analysis_text.split("\n")
+
+    for line in lines:
+        line = line.strip()
+        if line.startswith("USER_PARTY:"):
+            result["user_party"] = line.replace("USER_PARTY:", "").strip()
+        elif line.startswith("USER_RESULT:"):
+            user_result = line.replace("USER_RESULT:", "").strip().upper()
+            if "WIN" in user_result:
+                result["verdict"] = "WIN"
+            elif "LOSS" in user_result:
+                result["verdict"] = "LOSS"
+            else:
+                result["verdict"] = "UNCLEAR"
+        elif line.startswith("REASONING:"):
+            result["reasoning"] = line.replace("REASONING:", "").strip()
+
+    # If reasoning spans multiple lines, capture it all
+    if "REASONING:" in analysis_text:
+        reasoning_start = analysis_text.find("REASONING:") + len("REASONING:")
+        result["reasoning"] = analysis_text[reasoning_start:].strip()
+
+    return result
 
 
 def extract_simple_verdict(analysis_text: str) -> str:
-    """Extract simple verdict (WIN/LOSS) from analysis text."""
+    """Extract generic outcome from LLM analysis - let LLM determine what this means for the user."""
     if not analysis_text:
         return "UNCLEAR"
 
     analysis_lower = analysis_text.lower()
 
-    # Look for explicit verdict statements
-    if any(
-        phrase in analysis_lower
-        for phrase in [
-            "plaintiff won",
-            "petitioner won",
-            "petitioner succeeded",
-            "plaintiff succeeded",
-        ]
-    ):
-        return "WIN"
-    elif any(
-        phrase in analysis_lower
-        for phrase in [
-            "defendant won",
-            "respondent won",
-            "petition dismissed",
-            "claim rejected",
-        ]
-    ):
-        return "LOSS"
-    elif any(
-        phrase in analysis_lower
-        for phrase in ["in favor of", "ruled in favor", "decided in favor"]
-    ):
-        # Need more context to determine who it favored
-        if any(
-            phrase in analysis_lower
-            for phrase in ["plaintiff", "petitioner", "appellant"]
-        ):
-            return "WIN"
-        else:
-            return "LOSS"
+    print(f"🔍 Analyzing verdict text: {analysis_lower[:200]}...")
+
+    # Generic positive outcome indicators (someone succeeded/won)
+    positive_patterns = [
+        "won",
+        "successful",
+        "succeeded",
+        "prevailed",
+        "granted",
+        "allowed",
+        "favorable",
+        "in favor",
+        "relief",
+        "vindicated",
+        "upheld",
+        "sustained",
+        "appeal allowed",
+        "petition allowed",
+        "claim allowed",
+        "suit decreed",
+        "judgment in favor",
+        "order in favor",
+        "decree in favor",
+    ]
+
+    # Generic negative outcome indicators (someone failed/lost)
+    negative_patterns = [
+        "dismissed",
+        "rejected",
+        "failed",
+        "unsuccessful",
+        "denied",
+        "not granted",
+        "unfavorable",
+        "against",
+        "lost",
+        "defeated",
+        "appeal dismissed",
+        "petition dismissed",
+        "claim rejected",
+        "suit dismissed",
+    ]
+
+    # Count occurrences
+    positive_count = sum(
+        1 for pattern in positive_patterns if pattern in analysis_lower
+    )
+    negative_count = sum(
+        1 for pattern in negative_patterns if pattern in analysis_lower
+    )
+
+    print(
+        f"📊 Positive indicators: {positive_count}, Negative indicators: {negative_count}"
+    )
+
+    # Determine generic outcome
+    if positive_count > negative_count and positive_count > 0:
+        print("✅ Overall POSITIVE outcome detected")
+        return "POSITIVE_OUTCOME"
+    elif negative_count > positive_count and negative_count > 0:
+        print("❌ Overall NEGATIVE outcome detected")
+        return "NEGATIVE_OUTCOME"
     else:
+        print("❓ Outcome unclear")
         return "UNCLEAR"
 
 
@@ -666,11 +846,33 @@ def analyze_legal_cases(
     # Step 3: Find relevant cases
     relevant_doc_ids = find_relevant_cases(user_query, top_k=top_k)
 
-    # Step 4: Analyze verdicts for each case
+    # Step 4: Initialize results structure
     final_results = []
+
+    # Initialize incremental results file with basic info
+    incremental_results = {
+        "user_query": user_query,
+        "user_context": user_context,
+        "total_cases_to_analyze": len(relevant_doc_ids),
+        "analysis_status": "in_progress",
+        "cases_completed": 0,
+        "verdict_summary": {
+            "wins": 0,
+            "losses": 0,
+            "unclear": 0,
+        },
+        "cases": [],
+        "embedding_stats": embedding_stats,
+    }
+
+    # Write initial results file
+    output_file = "legal_analysis_results.json"
+    print(f"📝 Writing incremental results to: {output_file}")
+    save_analysis_results(incremental_results, output_file, quiet=True)
 
     print(f"\n📊 Analyzing verdicts for {len(relevant_doc_ids)} cases...")
 
+    # Step 5: Analyze verdicts for each case and update results incrementally
     for i, doc_id in enumerate(relevant_doc_ids):
         print(f"\nAnalyzing case {i+1}/{len(relevant_doc_ids)}: {doc_id}")
 
@@ -692,43 +894,58 @@ def analyze_legal_cases(
                 if len(verdict_analysis["analysis"]) > 500
                 else verdict_analysis["analysis"]
             ),
+            "user_party_identified": verdict_analysis.get(
+                "user_party_identified", "Unknown"
+            ),
+            "reasoning": verdict_analysis.get("reasoning", ""),
         }
 
         final_results.append(result)
         print(f"  Verdict: {verdict_analysis['verdict']}")
 
-    # Generate summary
-    win_count = sum(1 for r in final_results if r["verdict"] == "WIN")
-    loss_count = sum(1 for r in final_results if r["verdict"] == "LOSS")
-    unclear_count = sum(1 for r in final_results if r["verdict"] == "UNCLEAR")
+        # Update incremental results after each case
+        incremental_results["cases"].append(result)
+        incremental_results["cases_completed"] = i + 1
 
-    final_analysis = {
-        "user_query": user_query,
-        "user_context": user_context,
-        "total_cases_analyzed": len(final_results),
-        "verdict_summary": {
+        # Update verdict counts
+        win_count = sum(1 for r in final_results if r["verdict"] == "WIN")
+        loss_count = sum(1 for r in final_results if r["verdict"] == "LOSS")
+        unclear_count = sum(1 for r in final_results if r["verdict"] == "UNCLEAR")
+
+        incremental_results["verdict_summary"] = {
             "wins": win_count,
             "losses": loss_count,
             "unclear": unclear_count,
-        },
-        "cases": final_results,
-        "embedding_stats": embedding_stats,
-    }
+        }
+
+        # Write updated results after each case
+        print(f"  📝 Updated results file (completed: {i+1}/{len(relevant_doc_ids)})")
+        save_analysis_results(incremental_results, output_file, quiet=True)
+
+    # Step 6: Finalize results
+    incremental_results["analysis_status"] = "completed"
+    incremental_results["total_cases_analyzed"] = len(final_results)
+
+    # Final save with completion status
+    save_analysis_results(incremental_results, output_file)
 
     print(f"\n🎯 ANALYSIS COMPLETE!")
     print(f"  Total cases analyzed: {len(final_results)}")
     print(f"  Wins: {win_count}, Losses: {loss_count}, Unclear: {unclear_count}")
 
-    return final_analysis
+    return incremental_results
 
 
 def save_analysis_results(
-    results: dict, output_file: str = "legal_analysis_results.json"
+    results: dict, output_file: str = "legal_analysis_results.json", quiet: bool = False
 ):
     """Save analysis results to JSON file."""
     with open(output_file, "w", encoding="utf-8") as f:
         json.dump(results, f, ensure_ascii=False, indent=2)
-    print(f"\n💾 Results saved to: {output_file}")
+
+    if not quiet:
+        print(f"\n💾 Results saved to: {output_file}")
+    # For incremental saves, just write without verbose logging
 
 
 # Example usage for the complete legal case analysis:
