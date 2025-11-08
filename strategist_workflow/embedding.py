@@ -512,7 +512,7 @@ def load_cases_from_json(json_file_path: str) -> Dict[str, Dict]:
     print(f"Found {len(cases_list)} cases in the JSON file")
 
     # Limit to 5 cases for now
-    CASE_LIMIT = 10
+    CASE_LIMIT = 100
     if len(cases_list) > CASE_LIMIT:
         print(f"⚠️  Limiting to first {CASE_LIMIT} cases for testing")
         cases_list = cases_list[:CASE_LIMIT]

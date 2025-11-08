@@ -31,7 +31,7 @@ class WorkflowState(TypedDict, total=False):
 @dataclass(frozen=True)
 class AgentConfig:
     """Declarative configuration describing an agent's contract."""
-    
+
     name: str
     requires: Sequence[str]
     provides: Sequence[str]
@@ -51,7 +51,7 @@ class LLMWorkflowAgent:
         self.llm = llm
         self.config = config
         self.is_llm_agent = len(config.prompt_messages) > 0
-        
+
         if self.is_llm_agent:
             self.prompt = config.build_prompt()
             self.chain = self.prompt | llm | StrOutputParser()
@@ -62,7 +62,7 @@ class LLMWorkflowAgent:
     def as_node(self):
         def node(state: WorkflowState) -> WorkflowState:
             payload = self._prepare_payload(state)
-            
+
             # If this is a non-LLM agent, skip the chain and go straight to adapter
             if not self.is_llm_agent:
                 # For non-LLM agents, pass the raw payload values
@@ -73,7 +73,7 @@ class LLMWorkflowAgent:
                     response = json.dumps(payload)
             else:
                 response = self.chain.invoke(payload)
-            
+
             return self._format_response(response)
 
         return node
@@ -109,35 +109,33 @@ def query_generator_adapter(text: str) -> WorkflowState:
     """Parse LLM output to extract search queries as a list."""
     print(text)
     queries = []
-    for line in text.strip().split('\n'):
+    for line in text.strip().split("\n"):
         line = line.strip()
         # Remove bullet points, numbers, and extra whitespace
-        if line and not line.startswith('#'):
+        if line and not line.startswith("#"):
             # Clean up common prefixes
-            line = line.lstrip('•-*0123456789.) ')
+            line = line.lstrip("•-*0123456789.) ")
             if line:
                 queries.append(line)
-    
-    return {
-        "search_queries": json.dumps(queries, ensure_ascii=False)
-    }
+
+    return {"search_queries": json.dumps(queries, ensure_ascii=False)}
 
 
 def fetch_indian_kanoon_cases(
-    queries: list[str], 
-    api_token: str, 
+    queries: list[str],
+    api_token: str,
     target_total: int = 1,
-    max_pages_per_query: int = 5
+    max_pages_per_query: int = 5,
 ) -> str:
     """
     Fetch cases from Indian Kanoon API based on search queries.
-    
+
     Args:
         queries: List of search queries
         api_token: Indian Kanoon API token
         target_total: Target number of total cases to fetch
         max_pages_per_query: Maximum pages to fetch per query
-    
+
     Returns:
         JSON string containing aggregated results
     """
@@ -156,86 +154,90 @@ def fetch_indian_kanoon_cases(
             addedtoday=False,
             fromdate=None,
             todate=None,
-            sortby='mostrecent'
+            sortby="mostrecent",
         )
-        
+
         # Setup logging
-        setup_logging('info')
-        
+        setup_logging("info")
+
         # Initialize API
         filestorage = FileStorage(temp_dir)
         ikapi = IKApi(args, filestorage)
-        
+
         # Track results
         all_results = []
         total_fetched = 0
-        
+
         # Calculate cases per query
         cases_per_query = target_total // len(queries) if queries else 0
         pages_per_query = min(max_pages_per_query, (cases_per_query // 10) + 1)
-        
+
         for query in queries:
             if total_fetched >= target_total:
                 break
-                
+
             print(f"Searching Indian Kanoon for: {query}")
-            
+
             pagenum = 0
             query_results = []
-            
+
             while pagenum < pages_per_query * 10 and total_fetched < target_total:
                 try:
                     # Search Indian Kanoon
                     results = ikapi.search(query, pagenum, 10)
                     obj = json.loads(results)
                     # print(obj)
-                    if 'errmsg' in obj:
+                    if "errmsg" in obj:
                         print(f"Error for query '{query}': {obj['errmsg']}")
                         break
-                    
-                    if 'docs' not in obj or len(obj['docs']) <= 0:
+
+                    if "docs" not in obj or len(obj["docs"]) <= 0:
                         break
-                    
-                    docs = obj['docs']
+
+                    docs = obj["docs"]
                     # print(docs)
-                    print(f"Found {len(docs)} results for '{query}' (page {pagenum//10})")
-                    
+                    print(
+                        f"Found {len(docs)} results for '{query}' (page {pagenum//10})"
+                    )
+
                     for doc in docs:
                         if total_fetched >= target_total:
                             break
-                        
+
                         # Fetch full document details
-                        doc_json = ikapi.fetch_doc(doc['tid'])
+                        doc_json = ikapi.fetch_doc(doc["tid"])
                         doc_data = json.loads(doc_json)
-                        if 'errmsg' not in doc_data:
-                            query_results.append({
-                                'query': query,
-                                'docid': doc['tid'],
-                                'title': doc['title'],
-                                'court': doc['docsource'],
-                                'date': doc['publishdate'],
-                                'doc_data': doc_data
-                            })
+                        if "errmsg" not in doc_data:
+                            query_results.append(
+                                {
+                                    "query": query,
+                                    "docid": doc["tid"],
+                                    "title": doc["title"],
+                                    "court": doc["docsource"],
+                                    "date": doc["publishdate"],
+                                    "doc_data": doc_data,
+                                }
+                            )
                             print(total_fetched)
                             total_fetched += 1
-                    
+
                     pagenum += 10
-                    
+
                 except Exception as e:
                     print(f"Error processing query '{query}': {e}")
                     break
-            
+
             all_results.extend(query_results)
             print(f"Total cases fetched so far: {total_fetched}")
-        
+
         # Aggregate results
         summary = {
-            'total_cases': len(all_results),
-            'queries_used': queries,
-            'cases': all_results
+            "total_cases": len(all_results),
+            "queries_used": queries,
+            "cases": all_results,
         }
         print("DONE")
-        return summary
+        return json.dumps(summary, ensure_ascii=False, indent=2)
 
 
 def ik_search_adapter(text: str) -> WorkflowState:
@@ -245,24 +247,18 @@ def ik_search_adapter(text: str) -> WorkflowState:
     """
     # Parse queries from the input
     queries = json.loads(text)
-    
+
     # Get API token from environment variable
     api_token = "cda8b7c3af63ed9d26de627153494d8330737065"
     if not api_token:
         raise ValueError("INDIAN_KANOON_TOKEN environment variable not set")
-    
+
     # Fetch cases
     results = fetch_indian_kanoon_cases(
-        queries=queries,
-        api_token=api_token,
-        target_total=1,
-        max_pages_per_query=5
+        queries=queries, api_token=api_token, target_total=200, max_pages_per_query=5
     )
     print(results)
-    return {
-        "ik_search_results": results,
-        "research_materials": results,
-    }
+    return {"ik_search_results": results}
 
 
 def default_agent_configs() -> Sequence[AgentConfig]:
@@ -300,7 +296,6 @@ def default_agent_configs() -> Sequence[AgentConfig]:
             response_adapter=query_generator_adapter,
             metadata={"topic": "query-generation"},
         ),
-        
         # NEW AGENT: Indian Kanoon Search
         AgentConfig(
             name="indian_kanoon_search",
@@ -314,4 +309,5 @@ def default_agent_configs() -> Sequence[AgentConfig]:
             response_adapter=ik_search_adapter,
             metadata={"topic": "api-search"},
         ),
+        # user query -> prompt to generate embeddings for semantic matching
     ]
