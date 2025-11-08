@@ -1,0 +1,31 @@
+{
+  "user_query": "breach of contract for delayed delivery causing financial losses",
+  "user_context": "I am a buyer who suffered losses due to delayed delivery of critical equipment from a supplier",
+  "total_cases_analyzed": 1,
+  "verdict_summary": {
+    "wins": 0,
+    "losses": 0,
+    "unclear": 1
+  },
+  "cases": [
+    {
+      "rank": 1,
+      "doc_id": "64015856",
+      "title": "Enercon Gmbh vs Enercon (India) Ltd on 20 August, 2015",
+      "court": "Bombay High Court",
+      "date": "2015-08-20",
+      "verdict": "UNCLEAR",
+      "analysis_summary": "The final judgment detailed in the provided context concerned the procedural validity of an earlier decision made by the Company Law Board (the \"learned member\").\n\n**Outcome of the Appeal and Successful Party:**\n\nThe Appellants, **EG** (Enviro Group), were the successful party in this appeal, as the court agreed with their primary submission that the original order was flawed and required reconsideration (64015856, chunk 35).\n\n**Final Judgment and Ruling:**\n\n1.  **Quashing the Original Order:** ..."
+    }
+  ],
+  "embedding_stats": {
+    "collection_name": "legal_cases",
+    "num_cases": 1,
+    "num_chunks": 95,
+    "embedding_dim": 768,
+    "persist_directory": "./chroma_db",
+    "case_stats": {
+      "64015856": 95
+    }
+  }
+}

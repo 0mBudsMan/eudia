@@ -1,0 +1,17 @@
+{
+    "user_query": "breach of contract for delayed delivery causing financial losses",
+    "user_context": "I am a buyer who suffered losses due to delayed delivery of critical equipment from a supplier",
+    "input_json_file": "output.json",
+    "output_file": "legal_analysis_results.json",
+    "top_cases_to_analyze": 10,
+    "database_settings": {
+        "persist_directory": "./legal_case_db",
+        "collection_name": "legal_cases",
+        "chunk_overlap": 100,
+        "batch_size": 8
+    },
+    "model_settings": {
+        "embedding_model": "law-ai/InLegalBERT",
+        "llm_model": "gemini-2.5-flash-preview-09-2025"
+    }
+}
