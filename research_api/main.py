@@ -11,6 +11,8 @@ from .models import (
     CaseBriefResponse,
     CaseDetail,
     HealthResponse,
+    PrecedentRequest,
+    PrecedentResponse,
 )
 from . import service
 
@@ -67,6 +69,21 @@ def create_app() -> FastAPI:
     @app.post("/api/research/cases/{doc_id}/analyze", response_model=AnalyzeCaseResponse)
     def analyze_case(doc_id: str) -> AnalyzeCaseResponse:  # noqa: ARG001
         return service.simulate_case_analysis()
+
+    @app.post("/api/research/precedent", response_model=PrecedentResponse)
+    def run_precedent_query(payload: PrecedentRequest) -> PrecedentResponse:
+        try:
+            return service.run_precedent_rag(
+                prompt=payload.prompt,
+                top_k=payload.top_k,
+                collection_name=payload.collection_name,
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        except RuntimeError as exc:
+            raise HTTPException(status_code=500, detail=str(exc)) from exc
+        except Exception as exc:  # pragma: no cover - fallback
+            raise HTTPException(status_code=500, detail=str(exc)) from exc
 
     return app
 

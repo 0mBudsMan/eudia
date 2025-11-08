@@ -9,13 +9,24 @@ from functools import lru_cache
 from pathlib import Path
 from bs4 import BeautifulSoup
 
-from .models import AnalyzeCaseResponse, CaseDetail, ResearchCase, Verdict
+from strategist_workflow.embedding import query_case_embeddings_db
+
+from .models import (
+    AnalyzeCaseResponse,
+    CaseDetail,
+    PrecedentChunk,
+    PrecedentResponse,
+    PrecedentSource,
+    ResearchCase,
+    Verdict,
+)
 
 logger = logging.getLogger(__name__)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_RESULTS_FILE = PROJECT_ROOT / "legal_analysis_results.json"
 DEFAULT_CASES_DATA_DIR = PROJECT_ROOT / "cases_data"
+DEFAULT_CHROMA_PATH = PROJECT_ROOT / "chroma_db"
 
 
 def _env_path(var_name: str, default: Path) -> Path:
@@ -25,6 +36,7 @@ def _env_path(var_name: str, default: Path) -> Path:
 
 RESULTS_PATH = _env_path("LEGAL_ANALYSIS_RESULTS_FILE", DEFAULT_RESULTS_FILE)
 CASES_DATA_DIR = _env_path("CASES_DATA_DIR", DEFAULT_CASES_DATA_DIR)
+CHROMA_DB_PATH = _env_path("CHROMA_DB_PATH", DEFAULT_CHROMA_PATH)
 
 
 def _clean_html(html: str, max_chars: int = 1500) -> str:
@@ -182,6 +194,56 @@ def generate_anti_arguments(case_input: str, max_points: int = 3) -> str:
         )
     header = "Opposition talking points based on prior losses:\n"
     return header + "\n".join(bullets)
+
+
+def run_precedent_rag(
+    prompt: str,
+    top_k: int = 5,
+    collection_name: str | None = None,
+) -> PrecedentResponse:
+    question = (prompt or "").strip()
+    if not question:
+        raise ValueError("Prompt must not be empty.")
+
+    collection = collection_name or os.environ.get("PRECEDENT_COLLECTION_NAME", "case_chunks")
+
+    rag_result = query_case_embeddings_db(
+        query=question,
+        collection_name=collection,
+        persist_directory=str(CHROMA_DB_PATH),
+        top_k=top_k,
+    )
+
+    sources_summary = rag_result.get("sources_summary", {}) or {}
+    sources = [
+        PrecedentSource(
+            case_id=str(case_id),
+            chunks=[int(idx) for idx in sorted(indices)],
+        )
+        for case_id, indices in sources_summary.items()
+    ]
+
+    chunk_payload = []
+    for chunk in rag_result.get("relevant_chunks", []):
+        metadata = chunk.get("metadata") or {}
+        chunk_payload.append(
+            PrecedentChunk(
+                text=chunk.get("text", ""),
+                case_id=str(metadata.get("case_id", "")),
+                chunk_index=int(metadata.get("chunk_index", -1)),
+                similarity_score=float(chunk.get("similarity_score", 0.0)),
+            )
+        )
+
+    stats = rag_result.get("collection_stats", {}) or {}
+
+    return PrecedentResponse(
+        answer=rag_result.get("answer") or "No answer generated (check GEMINI_API_KEY).",
+        sources=sources,
+        chunks=chunk_payload,
+        collection=str(stats.get("name") or collection),
+        total_chunks=stats.get("total_chunks"),
+    )
 
 
 def simulate_case_analysis() -> AnalyzeCaseResponse:

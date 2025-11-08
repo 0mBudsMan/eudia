@@ -15,6 +15,7 @@ from bs4 import BeautifulSoup
 
 # Import the Indian Kanoon API components
 from .ikanoon import IKApi, FileStorage, setup_logging
+from .embedding import query_case_embeddings_db
 import argparse
 
 logger = logging.getLogger(__name__)
@@ -41,6 +42,7 @@ DEFAULT_ANALYSIS_RESULTS_PATH = PROJECT_ROOT / "legal_analysis_results.json"
 DEFAULT_IK_TOKEN = "cda8b7c3af63ed9d26de627153494d8330737065"
 MAX_LOSS_CASES = _int_from_env("LOSS_CASE_AGENT_MAX_CASES", 3)
 MAX_CASE_SNIPPET_CHARS = _int_from_env("LOSS_CASE_AGENT_MAX_CHARS", 4000)
+DEFAULT_CHROMA_PATH = PROJECT_ROOT / "chroma_db"
 
 AgentResponseAdapter = Callable[[str], Dict[str, str]]
 
@@ -271,6 +273,49 @@ def loss_case_loader_adapter(_: str) -> WorkflowState:
     return {"loss_case_documents": json.dumps(documents, ensure_ascii=False)}
 
 
+def precedent_rag_adapter(case_input: str) -> WorkflowState:
+    query = case_input.strip()
+    if not query:
+        return {"precedent_insights": "No case input provided for precedent analysis."}
+
+    collection_name = os.environ.get("PRECEDENT_COLLECTION_NAME", "case_chunks")
+    chroma_path = Path(
+        os.environ.get("CHROMA_DB_PATH", str(DEFAULT_CHROMA_PATH))
+    ).expanduser()
+    top_k = _int_from_env("PRECEDENT_TOP_K", 5)
+
+    try:
+        rag_result = query_case_embeddings_db(
+            query=query,
+            collection_name=collection_name,
+            persist_directory=str(chroma_path),
+            top_k=top_k,
+        )
+    except Exception as exc:  # pragma: no cover - rely on runtime logging
+        error_msg = f"Precedent analyzer error: {exc}"
+        logger.error(error_msg)
+        return {"precedent_insights": error_msg}
+
+    answer = rag_result.get("answer") or "No answer generated (check GEMINI_API_KEY)."
+    summary_lines = [answer.strip(), "", "Sources:"]
+    sources = rag_result.get("sources_summary", {})
+    if not sources:
+        summary_lines.append("- No sources returned from ChromaDB.")
+    else:
+        for case_id, chunk_ids in sources.items():
+            summary_lines.append(
+                f"- Case {case_id}: chunks {', '.join(str(idx) for idx in sorted(chunk_ids))}"
+            )
+
+    summary_lines.append("")
+    summary_lines.append(
+        f"(Collection: {rag_result.get('collection_stats', {}).get('name', collection_name)}, "
+        f"total chunks: {rag_result.get('collection_stats', {}).get('total_chunks', 'unknown')})"
+    )
+
+    return {"precedent_insights": "\n".join(summary_lines).strip()}
+
+
 def fetch_indian_kanoon_cases(
     queries: list[str],
     api_token: str,
@@ -486,6 +531,18 @@ def default_agent_configs() -> Sequence[AgentConfig]:
                 ),
             ],
             metadata={"topic": "anti-lawyer-analysis"},
+        ),
+        AgentConfig(
+            name="precedent_analyzer",
+            requires=("case_input",),
+            provides=("precedent_insights",),
+            description=(
+                "Run retrieval-augmented generation against the persisted case embeddings "
+                "to surface precedent-driven arguments with citations."
+            ),
+            prompt_messages=[],
+            response_adapter=precedent_rag_adapter,
+            metadata={"topic": "precedent-rag"},
         ),
         # user query -> prompt to generate embeddings for semantic matching
     ]

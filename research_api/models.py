@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal
+from typing import Literal, Optional, List
 
 from pydantic import BaseModel, Field
 
@@ -62,3 +62,32 @@ class AnalyzeCaseResponse(BaseModel):
 
 class HealthResponse(BaseModel):
     status: str = "ok"
+
+
+class PrecedentRequest(BaseModel):
+    prompt: str = Field(..., min_length=5, description="Question or case narrative to run against precedents")
+    top_k: int = Field(5, ge=1, le=20, description="Number of RAG chunks to retrieve")
+    collection_name: Optional[str] = Field(
+        None,
+        description="Optional Chroma collection override (defaults to PRECEDENT_COLLECTION_NAME or 'case_chunks')",
+    )
+
+
+class PrecedentSource(BaseModel):
+    case_id: str
+    chunks: List[int]
+
+
+class PrecedentChunk(BaseModel):
+    text: str
+    case_id: str
+    chunk_index: int
+    similarity_score: float
+
+
+class PrecedentResponse(BaseModel):
+    answer: str
+    sources: List[PrecedentSource]
+    chunks: List[PrecedentChunk]
+    collection: str
+    total_chunks: Optional[int] = None

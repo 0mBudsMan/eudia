@@ -74,6 +74,8 @@ def main() -> None:
     print("=== Legal Strategy Workflow Output ===")
     print("\n--- Research Materials ---")
     print(final_state.get("research_materials", ""))
+    print("\n--- Precedent Insights ---")
+    print(final_state.get("precedent_insights", ""))
     print("\n--- Anti-Lawyer Arguments ---")
     print(final_state.get("anti_arguments", ""))
     output_text = []
@@ -81,6 +83,7 @@ def main() -> None:
     # output_text.append("\n--- Research Materials ---")
     output_json = {
         "research_materials": final_state.get("research_materials", ""),
+        "precedent_insights": final_state.get("precedent_insights", ""),
         "anti_arguments": final_state.get("anti_arguments", ""),
     }
     final_output = json.dumps(output_json, indent=2)
