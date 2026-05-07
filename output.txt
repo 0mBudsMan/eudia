@@ -1,5 +1,5 @@
 === Legal Strategy Workflow Output ===s
-
+ 
 --- Research Materials ---
 {
   "total_cases": 1,
