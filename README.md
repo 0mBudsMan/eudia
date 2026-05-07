@@ -3,7 +3,7 @@
 Use `scripts/run_everything.sh` to boot the FastAPI research backend and the Next.js frontend from a single command.
 
 ```bash
-./scripts/run_everything.sh \
+./scripts/run_everything.sh \ 
   --facts-file path/to/case.txt   # optional: refresh legal_analysis_results.json first
 ```
 
