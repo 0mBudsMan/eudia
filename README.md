@@ -1,4 +1,4 @@
-## Development Shortcuts
+## Development Shortcutss
 
 Use `scripts/run_everything.sh` to boot the FastAPI research backend and the Next.js frontend from a single command.
 
