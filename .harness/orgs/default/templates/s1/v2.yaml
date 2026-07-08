@@ -5,7 +5,7 @@ template:
   orgIdentifier: default
   tags: {}
   spec:
-    timeout: 9m
+    timeout: 10m
     type: ShellScript
     spec:
       shell: Bash
@@ -15,6 +15,9 @@ template:
         type: Inline
         spec:
           script: echo hi1
-      environmentVariables: []
+      environmentVariables:
+        - name: type
+          type: String
+          value: <+input>.selectOneFrom(commit,push)
       outputVariables: []
   versionLabel: v2
