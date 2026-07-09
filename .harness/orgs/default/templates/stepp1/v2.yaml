@@ -1,0 +1,20 @@
+template:
+  name: stepp1
+  identifier: stepp1
+  type: Step
+  orgIdentifier: default
+  tags: {}
+  spec:
+    timeout: 10m
+    type: ShellScript
+    spec:
+      shell: Bash
+      executionTarget: {}
+      delegateSelectors: []
+      source:
+        type: Inline
+        spec:
+          script: echo 2
+      environmentVariables: []
+      outputVariables: []
+  versionLabel: v2
